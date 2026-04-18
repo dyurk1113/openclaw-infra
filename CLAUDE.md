@@ -39,7 +39,25 @@ The VM clones this repo at startup for custom code. Path: `/home/openclaw/pi_rep
 VM uses SPOT provisioning — can be preempted occasionally (rare in us-central1).
 OpenClaw systemd service is set to restart on failure and enabled on boot, so it recovers automatically.
 
+## WhatsApp Integration
+
+Uses OpenClaw's native Baileys-based WhatsApp channel (no Twilio needed for messaging).
+- `dmPolicy: allowlist` — only `+18176929089` can message the agent
+- QR linking is a one-time manual step (see below)
+
 ## Files
 
 - `startup.sh` — VM startup script (installs Node 22, op CLI, OpenClaw; pulls creds from 1Password)
+- `openclaw.json` — OpenClaw config (model, WhatsApp channel policy)
 - `.env` — `op://` references for local dev use with `op run`
+
+## First-time WhatsApp setup (one-time)
+
+After startup script completes:
+```bash
+gcloud compute ssh openclaw --zone us-central1-a
+sudo -u openclaw openclaw channels login --channel whatsapp
+# Scan QR with WhatsApp: Settings > Linked Devices > Link a Device
+sudo systemctl start openclaw
+sudo journalctl -u openclaw -f
+```

@@ -1,0 +1,13 @@
+{
+  "model": "openrouter/auto",
+  "provider": "openrouter",
+  "hostname": "openclaw-gcp",
+  "channels": {
+    "whatsapp": {
+      "dmPolicy": "allowlist",
+      "allowFrom": ["+18176929089"],
+      "groupPolicy": "allowlist",
+      "selfChatMode": true
+    }
+  }
+}
