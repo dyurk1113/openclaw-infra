@@ -72,13 +72,12 @@ sudo systemctl start openclaw
 sudo journalctl -u openclaw -f
 ```
 
-## openclaw.json config notes
+## Setup notes / lessons learned
 
-- Top-level keys must match schema: `models`, `agents`, `channels` etc — NOT `model`/`provider`/`apiKey` at root
-- `models.providers.<name>` requires a `models` array (even if just one entry for `auto`)
-- `agents.defaults.model` sets the default in `provider/model` format
-- `channels login` requires root (effective uid 0) — run as root with `HOME=/home/openclaw`
-- `.openclaw/` directory must be chmod 777 (or root-owned) for login to write session temp files
-- WhatsApp plugin is bundled (no npm install needed): `/usr/lib/node_modules/openclaw/dist/extensions/whatsapp`
-- systemd service runs as `openclaw` user with `EnvironmentFile=/home/openclaw/.env`
-- op CLI installed via `.deb` package: `https://downloads.1password.com/linux/debian/amd64/stable/1password-cli-amd64-latest.deb`
+- **Always use `openclaw onboard` interactively** — do NOT manually craft openclaw.json; it requires metadata fields only onboard sets correctly
+- Onboarding ran as `dyurk` (SSH user) → all config/sessions live in `/home/dyurk/.openclaw/`, systemd service must use `User=dyurk`
+- `channels login` requires root — run as root with `HOME=/home/dyurk`
+- `.openclaw/` directory must be writable by root for login temp files
+- WhatsApp plugin is bundled: `/usr/lib/node_modules/openclaw/dist/extensions/whatsapp`
+- op CLI installed via `.deb`: `https://downloads.1password.com/linux/debian/amd64/stable/1password-cli-amd64-latest.deb`
+- Gateway token stored in 1Password OpenClaw vault → "OpenClaw Gateway"
