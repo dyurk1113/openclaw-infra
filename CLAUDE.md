@@ -81,14 +81,42 @@ Then open `http://127.0.0.1:18789/` in browser. Token in 1Password OpenClaw vaul
 
 ## Diagnosing Problems
 
-**Always run `openclaw doctor` first before digging into logs or system files.** It catches:
-- Missing config fields
-- Stale state directories
-- Auth / API key issues
-- Orphaned processes / port conflicts
-- Plugin dependency problems
+**IMPORTANT: Before doing any manual investigation, always:**
+1. **Web search the error message** — many issues are known bugs with documented fixes (e.g. the `payloads=0` baseUrl regression in 2026.4.15)
+2. **Run `openclaw doctor`** — catches most config/auth/process issues automatically
+3. **Use `openclaw logs --follow`** and `openclaw gateway status --deep` — before grepping raw files
 
-Then read `/tmp/openclaw/openclaw-2026-XX-XX.log` for detailed per-request logs.
+Only dig into system files or processes if built-in tools don't surface the cause.
+
+Useful diagnostic commands:
+```bash
+HOME=/home/dyurk openclaw doctor
+HOME=/home/dyurk openclaw doctor --fix
+HOME=/home/dyurk openclaw gateway status --deep
+HOME=/home/dyurk openclaw channels status --probe
+HOME=/home/dyurk openclaw logs --follow
+```
+
+Detailed per-request logs: `/tmp/openclaw/openclaw-2026-XX-XX.log`
+
+## Secrets and Sensitive Information
+
+**Always use 1Password (`op`) for sensitive values — never hardcode API keys in commands or scripts.**
+
+Local usage pattern:
+```bash
+op run --env-file .env -- <command>
+```
+
+To use a secret inline without storing it in shell history:
+```bash
+KEY=$(op item get "OpenRouter" --vault OpenClaw --fields "API Key" --reveal)
+```
+
+The `.env` file uses `op://` references:
+```
+OPENROUTER_API_KEY=op://OpenClaw/OpenRouter/API Key
+```
 
 ## First-time WhatsApp setup (one-time, requires interactive TTY)
 
@@ -110,11 +138,12 @@ HOME=/home/dyurk openclaw gateway start
 - WhatsApp plugin is bundled: `/usr/lib/node_modules/openclaw/dist/extensions/whatsapp`
 - op CLI installed via `.deb`: `https://downloads.1password.com/linux/debian/amd64/stable/1password-cli-amd64-latest.deb`
 - **"gateway already running" / EADDRINUSE**: caused by orphaned `openclaw-gateway` child processes after improper stop. Fix: `openclaw gateway stop`, then if stuck, `openclaw gateway status --deep` to find PID, `kill <pid>`. Then `openclaw gateway start`.
-- **"agent couldn't generate a response"**: check `openclaw doctor` first. Common causes: memory search enabled with no embedding provider configured (fix: `openclaw config set agents.defaults.memorySearch.enabled false`), or OpenRouter API key missing/out of credits.
-- **SSH commands failing with exit 255**: usually a command in the chain returned non-zero (e.g. `pkill` with no matches). Run commands separately rather than chaining with `&&`.
-- **Stale `/home/openclaw/.openclaw`**: old config from when openclaw user was used before onboarding. Doctor flags this but it doesn't need to be deleted — just ignored since active state is `/home/dyurk/.openclaw/`.
-- Low-power VM optimization (set in service override at `~/.config/systemd/user/openclaw-gateway.service.d/override.conf`):
+- **"agent couldn't generate a response" / `payloads=0`**: Web search first — this is often a known bug. Root cause in 2026.4.15: wrong `baseUrl` in per-agent `models.json` (`https://openrouter.ai/v1` instead of `https://openrouter.ai/api/v1`). Fix: `sed -i 's|openrouter.ai/v1|openrouter.ai/api/v1|g' ~/.openclaw/agents/main/agent/models.json` then restart gateway. Also check memory search isn't blocking: `openclaw config set agents.defaults.memorySearch.enabled false`
+- **SSH commands failing with exit 255**: usually a command in the chain returned non-zero (e.g. `pkill` with no matches). Run commands separately, not chained with `&&`.
+- **Stale `/home/openclaw/.openclaw`**: old config from when openclaw user was used before onboarding. Doctor flags it but it doesn't need deletion — active state is `/home/dyurk/.openclaw/`.
+- Low-power VM optimization (set in service drop-in at `~/.config/systemd/user/openclaw-gateway.service.d/override.conf`):
   ```
-  NODE_COMPILE_CACHE=/var/tmp/openclaw-compile-cache
-  OPENCLAW_NO_RESPAWN=1
+  [Service]
+  Environment=NODE_COMPILE_CACHE=/var/tmp/openclaw-compile-cache
   ```
+  Do NOT set `OPENCLAW_NO_RESPAWN=1` — that disables auto-restart on crash.
