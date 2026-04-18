@@ -51,6 +51,16 @@ Uses OpenClaw's native Baileys-based WhatsApp channel (no Twilio needed for mess
 - `openclaw.json` — OpenClaw config (model, WhatsApp channel policy)
 - `.env` — `op://` references for local dev use with `op run`
 
+## Gateway Access
+
+Gateway binds to loopback only (`127.0.0.1:18789`). Access via SSH tunnel:
+```bash
+gcloud compute ssh openclaw --zone us-central1-a --project gen-lang-client-0279759260 -- -L 18789:127.0.0.1:18789
+```
+Then open `http://127.0.0.1:18789/` in browser. Token stored in 1Password OpenClaw vault → "OpenClaw Gateway".
+
+Onboarding was done interactively with `openclaw onboard`. Config is now managed by OpenClaw — do NOT manually overwrite `openclaw.json` without using `openclaw config set` or it will fail metadata checks.
+
 ## First-time WhatsApp setup (one-time, requires interactive TTY)
 
 ```bash
