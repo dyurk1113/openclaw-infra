@@ -1,7 +1,22 @@
 {
-  "model": "openrouter/auto",
-  "provider": "openrouter",
-  "hostname": "openclaw-gcp",
+  "models": {
+    "providers": {
+      "openrouter": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKey": "INJECTED_AT_RUNTIME",
+        "models": [
+          { "id": "auto", "name": "OpenRouter Auto", "api": "openai-completions" },
+          { "id": "deepseek/deepseek-chat-v3-0324", "name": "DeepSeek V3", "api": "openai-completions" },
+          { "id": "moonshotai/kimi-k2-5", "name": "Kimi K2.5", "api": "openai-completions" }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "openrouter/auto"
+    }
+  },
   "channels": {
     "whatsapp": {
       "dmPolicy": "allowlist",

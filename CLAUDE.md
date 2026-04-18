@@ -51,13 +51,24 @@ Uses OpenClaw's native Baileys-based WhatsApp channel (no Twilio needed for mess
 - `openclaw.json` — OpenClaw config (model, WhatsApp channel policy)
 - `.env` — `op://` references for local dev use with `op run`
 
-## First-time WhatsApp setup (one-time)
+## First-time WhatsApp setup (one-time, requires interactive TTY)
 
-After startup script completes:
 ```bash
-gcloud compute ssh openclaw --zone us-central1-a
-sudo -u openclaw openclaw channels login --channel whatsapp
+gcloud compute ssh openclaw --zone us-central1-a --project gen-lang-client-0279759260
+# Then on the VM:
+HOME=/home/openclaw openclaw channels login --channel whatsapp
 # Scan QR with WhatsApp: Settings > Linked Devices > Link a Device
 sudo systemctl start openclaw
 sudo journalctl -u openclaw -f
 ```
+
+## openclaw.json config notes
+
+- Top-level keys must match schema: `models`, `agents`, `channels` etc — NOT `model`/`provider`/`apiKey` at root
+- `models.providers.<name>` requires a `models` array (even if just one entry for `auto`)
+- `agents.defaults.model` sets the default in `provider/model` format
+- `channels login` requires root (effective uid 0) — run as root with `HOME=/home/openclaw`
+- `.openclaw/` directory must be chmod 777 (or root-owned) for login to write session temp files
+- WhatsApp plugin is bundled (no npm install needed): `/usr/lib/node_modules/openclaw/dist/extensions/whatsapp`
+- systemd service runs as `openclaw` user with `EnvironmentFile=/home/openclaw/.env`
+- op CLI installed via `.deb` package: `https://downloads.1password.com/linux/debian/amd64/stable/1password-cli-amd64-latest.deb`

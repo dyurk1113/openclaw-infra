@@ -15,14 +15,11 @@ if ! node --version 2>/dev/null | grep -q "^v22"; then
 fi
 echo "Node: $(node --version)"
 
-# ── 3. 1Password CLI (arm64) ─────────────────────────────────────────────────
+# ── 3. 1Password CLI ─────────────────────────────────────────────────────────
 if ! command -v op &>/dev/null; then
-  OP_VERSION=$(curl -s https://app-updates.agilebits.com/product_history/CLI2 \
-    | grep -oP '(?<=<version>)[^<]+' | head -1)
-  curl -sSfo /tmp/op.zip \
-    "https://cache.agilebits.com/dist/1P/op2/pkg/${OP_VERSION}/op_linux_amd64_${OP_VERSION}.zip"
-  unzip -o /tmp/op.zip -d /usr/local/bin/
-  chmod +x /usr/local/bin/op
+  curl -sSo /tmp/op.deb \
+    https://downloads.1password.com/linux/debian/amd64/stable/1password-cli-amd64-latest.deb
+  dpkg -i /tmp/op.deb
 fi
 echo "op: $(op --version)"
 
