@@ -46,7 +46,7 @@ REPO_DIR=/home/openclaw/pi_repo
 if [ -d "$REPO_DIR/.git" ]; then
   git -C "$REPO_DIR" pull --ff-only
 else
-  git clone https://github.com/dyurk1113/openclaw-infra.git "$REPO_DIR"
+  git clone "https://dyurk1113:${GITHUB_TOKEN}@github.com/dyurk1113/openclaw-infra.git" "$REPO_DIR"
 fi
 chown -R openclaw:openclaw "$REPO_DIR"
 
@@ -54,12 +54,19 @@ chown -R openclaw:openclaw "$REPO_DIR"
 OPENROUTER_API_KEY=$(OP_SERVICE_ACCOUNT_TOKEN="$OP_SERVICE_ACCOUNT_TOKEN" \
   op item get "OpenRouter" --vault "OpenClaw" --fields "API Key" --reveal)
 
+GITHUB_TOKEN=$(OP_SERVICE_ACCOUNT_TOKEN="$OP_SERVICE_ACCOUNT_TOKEN" \
+  op item get "GitHub Token" --vault "OpenClaw" --fields credential --reveal)
+
 cat > /home/openclaw/.config/openclaw/config.json << EOF
 {
   "provider": "openrouter",
   "model": "openrouter/auto",
   "apiKey": "${OPENROUTER_API_KEY}",
-  "hostname": "openclaw-gcp"
+  "hostname": "openclaw-gcp",
+  "github": {
+    "token": "${GITHUB_TOKEN}",
+    "username": "dyurk1113"
+  }
 }
 EOF
 chown openclaw:openclaw /home/openclaw/.config/openclaw/config.json
