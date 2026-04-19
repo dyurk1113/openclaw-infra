@@ -38,7 +38,15 @@ The VM clones this repo at startup for custom code. Path: `/home/dyurk/pi_repo`.
 ## Spot VM Notes
 
 VM uses SPOT provisioning — can be preempted occasionally (rare in us-central1).
-OpenClaw user-level systemd service is enabled on boot (`loginctl enable-linger dyurk`), so it recovers automatically.
+OpenClaw user-level systemd service is enabled on boot (`loginctl enable-linger dyurk`), so it recovers automatically after a restart.
+
+**Auto-restart after preemption**: GCE Spot VMs have `automaticRestart` forcibly disabled — they can't self-restart. A Cloud Scheduler job (`restart-openclaw-spot`, us-central1) fires every 5 minutes and POSTs to the Compute Engine `instances.start` API. This is a no-op if the VM is already running, and brings it back within ~5 min after any preemption. The disk is preserved across preemptions so WhatsApp session and all config survive.
+
+To check/manage the scheduler job:
+```bash
+gcloud scheduler jobs describe restart-openclaw-spot --location us-central1 --project gen-lang-client-0279759260
+gcloud scheduler jobs run restart-openclaw-spot --location us-central1 --project gen-lang-client-0279759260  # force trigger now
+```
 
 ## WhatsApp Integration
 
